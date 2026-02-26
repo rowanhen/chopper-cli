@@ -1,5 +1,5 @@
 {
-  "name": "chopper",
+  "name": "@shepherd-terminal/chopper",
   "version": "0.1.0",
   "description": "CLI tool for cryptocurrency trade analysis - best trades, oracle bounds, and drawdown analysis",
   "type": "module",
@@ -23,7 +23,7 @@
     "build": "tsc -p tsconfig.json",
     "dev": "bun run src/cli.ts",
     "test": "bun test",
-    "release": "release-it"
+    "prepare": "git config core.hooksPath .githooks"
   },
   "keywords": [
     "crypto",
@@ -41,10 +41,12 @@
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
-    "release-it": "^17.10.0",
     "typescript": "^5.7.0"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
