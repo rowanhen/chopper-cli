@@ -12,6 +12,7 @@ export { readCache, writeCache } from "./core/marketdata/cache.js";
 export type {
   Candle,
   BestTradeResult,
+  BestTradeOptions,
   OracleBoundResult,
   MaxDrawdownResult,
   CommonOptions,

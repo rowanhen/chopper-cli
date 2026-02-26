@@ -19,6 +19,14 @@ export interface BestTradeResult {
   entryPrice: number;
   exitPrice: number;
   pctReturn: number;
+  candlesBetween: number;
+}
+
+/**
+ * Options for best trade analysis
+ */
+export interface BestTradeOptions {
+  maxCandles?: number;
 }
 
 /**

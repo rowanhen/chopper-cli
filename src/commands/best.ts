@@ -4,6 +4,10 @@ import { readCache, writeCache } from "../core/marketdata/cache.js";
 import { bestSingleTrade } from "../core/analysis/bestTrade.js";
 import type { CommonOptions } from "../core/types.js";
 
+interface BestCommandOptions extends CommonOptions {
+  maxCandles?: string;
+}
+
 export const bestCommand = new Command("best")
   .description("Find the best single long trade in a time window")
   .argument("<symbol>", "Trading pair (e.g., BTC/USDT)")
@@ -11,9 +15,10 @@ export const bestCommand = new Command("best")
   .option("-t, --tf <timeframe>", "Candle timeframe", "1h")
   .option("-f, --from <iso>", "Start date (ISO format)")
   .option("-T, --to <iso>", "End date (ISO format)")
+  .option("-n, --max-candles <n>", "Max candles between entry and exit")
   .option("-j, --json", "Output as JSON", false)
-  .action(async (symbol: string, options: CommonOptions) => {
-    const { exchange, tf, from, to, json } = options;
+  .action(async (symbol: string, options: BestCommandOptions) => {
+    const { exchange, tf, from, to, json, maxCandles: maxCandlesStr } = options;
 
     if (!from || !to) {
       console.error("Error: --from and --to are required");
@@ -25,6 +30,12 @@ export const bestCommand = new Command("best")
 
     if (isNaN(fromMs) || isNaN(toMs)) {
       console.error("Error: Invalid date format. Use ISO format (e.g., 2024-01-01)");
+      process.exit(1);
+    }
+
+    const maxCandles = maxCandlesStr ? parseInt(maxCandlesStr, 10) : undefined;
+    if (maxCandlesStr && (isNaN(maxCandles!) || maxCandles! < 1)) {
+      console.error("Error: --max-candles must be a positive integer");
       process.exit(1);
     }
 
@@ -44,7 +55,7 @@ export const bestCommand = new Command("best")
         process.exit(1);
       }
 
-      const result = bestSingleTrade(candles);
+      const result = bestSingleTrade(candles, { maxCandles });
 
       if (!result) {
         if (json) {
@@ -65,11 +76,15 @@ export const bestCommand = new Command("best")
         console.log(`Timeframe:   ${tf}`);
         console.log(`Period:      ${from} to ${to}`);
         console.log(`Candles:     ${candles.length}`);
+        if (maxCandles) {
+          console.log(`Max Window:  ${maxCandles} candles`);
+        }
         console.log("─".repeat(40));
         console.log(`Entry:       ${new Date(result.entryTs).toISOString()}`);
         console.log(`             $${result.entryPrice.toFixed(2)}`);
         console.log(`Exit:        ${new Date(result.exitTs).toISOString()}`);
         console.log(`             $${result.exitPrice.toFixed(2)}`);
+        console.log(`Duration:    ${result.candlesBetween} candles`);
         console.log("─".repeat(40));
         console.log(`Return:      ${result.pctReturn.toFixed(2)}%`);
       }

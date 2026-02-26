@@ -21,6 +21,7 @@ describe("bestSingleTrade", () => {
     expect(result!.entryPrice).toBe(100);
     expect(result!.exitPrice).toBe(200);
     expect(result!.pctReturn).toBe(100); // 100% gain
+    expect(result!.candlesBetween).toBe(4);
   });
 
   test("returns null for pure downtrend (no profitable trade)", () => {
@@ -104,5 +105,68 @@ describe("bestSingleTrade", () => {
     const result = bestSingleTrade(candles);
 
     expect(result).toBeNull();
+  });
+
+  describe("with maxCandles constraint", () => {
+    test("finds best trade within candle limit", () => {
+      // Uptrend: 100 -> 125 -> 150 -> 175 -> 200
+      // With maxCandles=2, best is 150->200 (last 2 candles) = 33.3%
+      // Or 175->200 = 14.3%
+      // Actually let's trace: at each exit, find min in window
+      // Exit at idx 2 (150): window [0,1,2], min at 0 (100), profit 50
+      // Exit at idx 3 (175): window [1,2,3], min at 1 (125), profit 50
+      // Exit at idx 4 (200): window [2,3,4], min at 2 (150), profit 50
+      // All same profit, first one wins: entry at 100, exit at 150
+      const result = bestSingleTrade(uptrendCandles, { maxCandles: 2 });
+
+      expect(result).not.toBeNull();
+      expect(result!.candlesBetween).toBeLessThanOrEqual(2);
+      expect(result!.pctReturn).toBe(50); // 100 -> 150 = 50%
+    });
+
+    test("constrains to 1 candle window", () => {
+      const result = bestSingleTrade(uptrendCandles, { maxCandles: 1 });
+
+      expect(result).not.toBeNull();
+      expect(result!.candlesBetween).toBe(1);
+      // Each adjacent pair: 100->125 (25%), 125->150 (20%), 150->175 (16.7%), 175->200 (14.3%)
+      // Best is first: 100->125 = 25%
+      expect(result!.pctReturn).toBe(25);
+    });
+
+    test("returns null when maxCandles is 0", () => {
+      const result = bestSingleTrade(uptrendCandles, { maxCandles: 0 });
+      expect(result).toBeNull();
+    });
+
+    test("finds V-shape trade within constraint", () => {
+      // V-shape: 100 -> 75 -> 50 -> 75 -> 100
+      // With maxCandles=2: best is 50->100 at end = 100%
+      const result = bestSingleTrade(vShapeCandles, { maxCandles: 2 });
+
+      expect(result).not.toBeNull();
+      expect(result!.candlesBetween).toBeLessThanOrEqual(2);
+      expect(result!.entryPrice).toBe(50);
+      expect(result!.exitPrice).toBe(100);
+    });
+
+    test("misses best trade when window too small", () => {
+      // V-shape: 100 -> 75 -> 50 -> 75 -> 100
+      // Best unconstrained: buy at 50 (idx 2), sell at 100 (idx 4) = 100%
+      // With maxCandles=1, best is 50->75 (50%) or 75->100 (33%), so 50%
+      const unconstrained = bestSingleTrade(vShapeCandles);
+      const constrained = bestSingleTrade(vShapeCandles, { maxCandles: 1 });
+
+      expect(unconstrained!.pctReturn).toBe(100);
+      expect(constrained!.pctReturn).toBe(50);
+      expect(constrained!.candlesBetween).toBe(1);
+    });
+
+    test("large maxCandles equals unconstrained", () => {
+      const unconstrained = bestSingleTrade(uptrendCandles);
+      const constrained = bestSingleTrade(uptrendCandles, { maxCandles: 100 });
+
+      expect(constrained).toEqual(unconstrained);
+    });
   });
 });

@@ -1,17 +1,17 @@
-# chopper
+# @shepherd-terminal/chopper
 
 Cryptocurrency trade analysis CLI and library.
 
 ## Installation
 
 ```bash
-npm install -g chopper
+npm install -g @shepherd-terminal/chopper
 ```
 
 Or use with npx:
 
 ```bash
-npx chopper best BTC/USDT --from 2024-01-01 --to 2024-06-01
+npx @shepherd-terminal/chopper best BTC/USDT --from 2024-01-01 --to 2024-06-01
 ```
 
 ## CLI Commands
@@ -22,6 +22,16 @@ Find the best single long trade (buy then sell) in a time window.
 
 ```bash
 chopper best BTC/USDT --from 2024-01-01 --to 2024-06-01
+```
+
+Constrain to trades within a time window using `--max-candles`:
+
+```bash
+# Best trade within any 24h window (using 1m candles for accuracy)
+chopper best BTC/USDT -t 1m --from 2024-01-01 --to 2024-01-07 --max-candles 1440
+
+# Best trade within any 7-day window
+chopper best ETH/USDT -t 1h --from 2024-01-01 --to 2024-03-01 --max-candles 168
 ```
 
 ### `chopper bound <symbol>`
@@ -50,6 +60,12 @@ chopper dd BTC/USDT --tf 4h --from 2023-01-01 --to 2023-12-31
 | `-T, --to <iso>` | End date (ISO format) | required |
 | `-j, --json` | Output as JSON | `false` |
 
+### Best Command Options
+
+| Option | Description |
+|--------|-------------|
+| `-n, --max-candles <n>` | Max candles between entry and exit (constrains trade duration) |
+
 ## Library Usage
 
 ```typescript
@@ -59,7 +75,7 @@ import {
   maxDrawdown,
   fetchCandles,
   type Candle,
-} from "chopper";
+} from "@shepherd-terminal/chopper";
 
 // Fetch candles
 const candles = await fetchCandles(
@@ -72,10 +88,11 @@ const candles = await fetchCandles(
 
 // Analyze
 const best = bestSingleTrade(candles);
+const bestConstrained = bestSingleTrade(candles, { maxCandles: 24 }); // within 24 candles
 const bound = oracleBound(candles);
 const dd = maxDrawdown(candles);
 
-console.log(best);  // { entryTs, exitTs, entryPrice, exitPrice, pctReturn }
+console.log(best);  // { entryTs, exitTs, entryPrice, exitPrice, pctReturn, candlesBetween }
 console.log(bound); // { oracleBound, buyAndHold, totalCandles, positiveMovesCount }
 console.log(dd);    // { pct, peakTs, troughTs, peakPrice, troughPrice }
 ```
