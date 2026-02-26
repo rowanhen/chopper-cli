@@ -35,6 +35,10 @@
   ],
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rowanhen/chopper-cli.git"
+  },
   "dependencies": {
     "ccxt": "^4.4.0",
     "commander": "^12.1.0"
