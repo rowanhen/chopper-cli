@@ -80,6 +80,8 @@ jobs:
         run: bun test
 
       - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --provenance --access public
 
       - name: Commit and tag
