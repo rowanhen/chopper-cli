@@ -60,3 +60,15 @@ export interface CommonOptions {
   to: string;
   json: boolean;
 }
+
+/**
+ * Result of entry timing analysis
+ */
+export interface EntryTimingResult {
+  hourDistribution: number[];
+  dayDistribution: number[];
+  totalTrades: number;
+  avgReturn: number;
+  bestHours: { hour: number; count: number; avgReturn: number }[];
+  bestDays: { day: number; count: number; avgReturn: number }[];
+}
