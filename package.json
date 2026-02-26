@@ -1,6 +1,6 @@
 {
   "name": "@shepherd-terminal/chopper",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "CLI tool for cryptocurrency trade analysis - best trades, oracle bounds, and drawdown analysis",
   "type": "module",
   "bin": {
